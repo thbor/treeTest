@@ -1,5 +1,5 @@
 import { Tree } from 'antd';
-import { useEffect, useState } from 'react';
+import React,{ useEffect, useState } from 'react';
 import _ from "lodash"
 import "./mytree.ts"
 import "./index.less"
@@ -33,14 +33,16 @@ export default function IndexPage() {
     setSelectedKeys(selectedKeysValue);
   };
   //修改时将原数据isEditable变为true,并复制一个原来的title（oldTitle），准备在取消的时候备用
-  const updateInput=(treeItem:treeObj)=>{
+  const updateInput=(treeItem:treeObj,ref:any)=>{
     treeItem.oldTitle = treeItem.title
     treeItem.isEditable = true
+    ref.current.value = treeItem.oldTitle
     cloneAndChangeToNodeTitle(treeData)
   }
   //点击保存，关闭可编辑
-  const saveInput=(treeItem:treeObj)=>{
+  const saveInput=(treeItem:treeObj,ref:any)=>{
     treeItem.isEditable = false
+    treeItem.title = ref.current.value
     cloneAndChangeToNodeTitle(treeData)
   }
   //点击取消，将title还原为oldTitle
@@ -54,16 +56,16 @@ export default function IndexPage() {
     for(let i=0;i<data.length;i++){
       let item:treeObj = data[i];
       let treeItem:any = treeData[i]    //该数据拿去修改原值，并更新
-      // let unchangedItem = treeData[i]         //该数据用来在取消时拿到原有没有被改变的值
+      let ref:any = React.createRef()
       item.title = (
         <div>
           <div className={item.isEditable?"none":"inline"}>
             <div className="inline mr-1">{item.title}</div>
-            <button onClick={()=>updateInput(treeItem)}>修改</button>
+            <button onClick={()=>updateInput(treeItem,ref)}>修改</button>
           </div>
           <div className={item.isEditable?"inline":"none"}>
-            <input className="mr-1" value={item.title} onChange={(e) => changeTitle(e, treeItem)} onKeyDown={(e)=>e.keyCode===13&&saveInput(treeItem)}/>
-            <button className="mr-1" onClick={()=>saveInput(treeItem)}>确定</button>
+            <input ref={ref} className="mr-1" defaultValue={item.title} onChange={(e) => changeTitle(e, ref)} onKeyDown={(e)=>e.keyCode===13&&saveInput(treeItem,ref)}/>
+            <button className="mr-1" onClick={()=>saveInput(treeItem,ref)}>确定</button>
             <button onClick={()=>cancelInput(treeItem)}>取消</button>
           </div>
         </div>
@@ -75,10 +77,9 @@ export default function IndexPage() {
     return data
   }
   //改变title
-  const changeTitle=(e:React.ChangeEvent<HTMLInputElement>,treeItem:treeObj)=>{
+  const changeTitle=(e:React.ChangeEvent<HTMLInputElement>,ref:any)=>{
     let value:string = e.target.value
-    treeItem.title = value
-    cloneAndChangeToNodeTitle(treeData)
+    ref.current.value = value
   }
   return (
     <div>
